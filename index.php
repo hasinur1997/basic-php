@@ -1,44 +1,70 @@
 <?php 
-	/*try{
-	$db = new PDO('mysql:host=localhost; dbname=test', 'root', '');
-}catch(PDOException $e){
-	$e->getMessage();
-};
-
-$result = $db->prepare("SELECT * FROM user");
-$result->execute();
-$data = $result->fetchAll(PDO::FETCH_OBJ);
-$x = 1;
-
-
-session_start();
-$_SESSION['captcha'] =  ['first' => rand(1, 11), 'second' => rand(1, 12)];
-
-if(!empty($_POST)){
-	if(($_SESSION['captcha']['first'] + $_SESSION['captcha']['second']) == $_POST['captcha']){
-
-	echo "Ok";
-
+	try{
+		$db = new PDO("mysql:host=localhost;dbname=programming", "root", "");
+	}catch(PDOException $e)
+	{
+		$e->getMessage();
 	}
-	else{
-		echo "false";
+	
+	$errors = [];
+	$message = null;
+	
+	$class = [];
+	
+	if(!empty($_POST)){
+		
+		$name = $_POST['name'];
+		
+		$file = $_FILES['data'];
+		
+		$file_name = $file['name'];
+		
+		$basename = basename($file_name);
+		
+		$file_tmp_name = $file['tmp_name'];
+		
+		$file_new_name = time().$file['name'];
+		
+		if(empty($name)){
+			
+			$errors['name'] = "Plese enter your name";
+		}
+		
+	
+		if(empty($file_name)){
+			
+			$errors['data'] = "Plese upload a file";
+		}
+		
+		
+		if(count($errors) == 0){
+			
+			$data = $db->prepare("INSERT INTO test_file(name, data) VALUES(?, ?)");
+			
+			$data = $data->execute([$name, $file_new_name]);
+			
+			$upload = move_uploaded_file($file_tmp_name, 'upload/'.$file_new_name);
+			
+			if($data == true && $upload == true){
+				
+				$message = "Your data has been submitted";
+				
+				$class = "success";
+				
+			}else{
+				$message = "Your data can not be submited please try again !";
+				
+				$class = "danger";
+			}
+		}
 	}
-
-}
-
-1*2*4*5*10
-
-*/
-
-$name = "Hasinur Rahman";
-$age = 20;
-$country  = ['Bangladesh', 'Pakistan', 'India', 'Sri-Lanka'];
-
-$result = compact("country");
-
-var_dump($result);
-
-
+	
+	$data = $db->prepare("SELECT * FROM test_file");
+	
+	$data->execute();
+	
+	$data = $data->fetchAll(PDO::FETCH_OBJ);
+	
 ?>
 
 
@@ -49,93 +75,159 @@ var_dump($result);
 	<title>Document</title>
 	<link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
 	<link rel="stylesheet" href="style.css">
+	<style type="text/css"> 
+		body{
+			font-family:calibri;
+		}
+	</style>
 </head>
 <body>
 	
-
-
-
-	<!--<div class="wrapper"> 
-		<div class="container"> 
-			<div class="row"> 
-				<div class="col-md-2"></div>
-				<div class="col-md-8">
-					
-					<table class="table table-bordered table-condensed table-striped table-hover text-center"> 
-						<tr> 
-							<th>Serial No</th>
-							<th>Name</th>
-							<th>Email</th>
-							<th>Phone</th>
-						</tr>
-						<?php foreach($data as $row):?>
-							<tr> 
-								<td><?php echo $x;?></td>
-								<td><a  href="" id="<?php echo $row->id;?>" class="hover"><?php echo $row->name;?></a></td>
-								<td><?php echo $row->email;?></td>
-								<td><?php echo $row->phone;?></td>
-							</tr>
-							<?php $x++;?>
-						<?php endforeach;?>
-					</table>
-				</div>
-				<div class="col-md-2"></div>
-			</div>
+	<nav class="navbar navbar-default"> 
+		<div class="navbar-header"> 
+			<a href="#" class="navbar-brand">Site</a>
 		</div>
-	</div>
+		
+		<ul class="nav navbar-nav pull-right">
+			<li><a href="">Home</a></li>
+			<li><a href="">About</a></li>
+			<li><a href="">Service</a></li>
+			<li><a href="">Contact</a></li>
+			
+		</ul>
+	</nav>
+
 
 	<div class="container"> 
+	
 		<div class="row"> 
-			<div class="col-md-4"></div>
-			<div class="col-md-4">
-				<form action="" method="POST"> 
-					<div class="form-group"> 
-						<label for="captcha">
-						<?php echo $_SESSION['captcha']['first']. " + " .$_SESSION['captcha']['second']?>
-					</label>
-					<input type="text" name="captcha" class="form-control">
+		
+			<div class="col-md-6 col-md-offset-3"> 
+				
+				<?php if(isset($message) && isset($class)):?>
+				
+					<div class="alert alert-<?php echo $class;?>">
+						<?php echo $message;?>
 					</div>
-
-					<div class="form-group"> 
-						<input type="submit" class="btn btn-default" value="Submit">
+					
+				<?php endif?>
+			
+				<div class="panel panel-default"> 
+				
+					<div class="panel-heading"> 
+					
+						Creating Submit File
+						
 					</div>
-
-				</form>
+					
+					<div class="panel-body"> 
+					
+						<form action="" method="post" enctype="multipart/form-data"> 
+						
+							<div class="form-group<?php echo array_key_exists('name', $errors) ? ' has-error' : "";?>"> 
+							
+								<label for="name" class="control-label">Name</label>
+								
+								<input type="text" name="name" id="name" class="form-control"/>
+								
+								<?php if(array_key_exists('name', $errors)):?>
+								
+									<b class="help-block"><?php echo $errors['name']?></b>
+								
+								<?php endif?>
+								
+							</div>
+							
+							<div class="form-group<?php echo array_key_exists('data', $errors) ? ' has-error' : "";?>"> 
+							
+								<label for="data" class="control-label">File</label>
+								
+								<input type="file" name="data" id="data" class="form-control"/>
+								
+								<?php if(array_key_exists('data', $errors)):?>
+								
+									<b class="help-block"><?php echo $errors['data']?></b>
+								
+								<?php endif?>
+								
+							</div>
+							
+							<div class="form-group"> 
+							
+								<input type="submit" class="btn btn-default"/>
+								
+							</div>
+							
+						</form>
+						
+					</div>
+					
+				</div>
+				
 			</div>
-			<div class="col-md-4"></div>
+			
 		</div>
+		
 	</div>
-
-
-
-	<script src="bootstrap/js/jquery.js"></script>
-	<script src="bootstrap/js/bootstrap.min.js"></script>
-	<script> 
-		$(document).ready(function(){
-			$('.hover').tooltip({
-				title:fetchData,
-				html:true,
-				placement: 'bottom'
-			});
-
-			function fetchData(){
-				var fetchData = '';
-				var element = $(this);
-				var id = element.attr("id"); 
-
-				$.ajax({
-					url:'fetch.php',
-					type:'POST',
-					async:false,
-					data:{id:id},
-					success: function(data){
-						fetchData = data;
-					}
-				});
-
-				return fetchData;
-			}
-		});
-	</script>-->
+	
+	
+	<div class="container"> 
+	
+		<div class="row">
+		
+			<div class="col-md-6 col-md-offset-3"> 
+			
+				<div class="panel panel-info"> 
+				
+					<div class="panel-heading"> 
+					
+						Work List
+						
+					</div>
+					
+					<div class="panel-body"> 
+					
+						<table class="table table-striped table-condensed">
+						
+							<thead>
+							
+								<tr>
+								
+									<th>Name</th>
+									
+									<th>File</th>
+									
+								</tr>
+								
+							</thead>
+							
+							<tbody> 
+							
+								<?php foreach($data as $d):?>
+								
+								<tr>
+								
+									<td><?php echo $d->name?></td>
+									
+									<td><a href="download.php?deta=<?php echo $d->data?>">Download</a></td>
+									
+								</tr>
+								
+								<?php endforeach?>
+								
+							</tbody>
+							
+						</table>
+						
+					</div>
+					
+				</div>
+				
+			</div>
+			
+		</div>
+		
+	</div>
+	
 </body>
 </html>
